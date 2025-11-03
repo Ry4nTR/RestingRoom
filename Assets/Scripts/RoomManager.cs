@@ -9,21 +9,30 @@ public class RoomManager : MonoBehaviour
     public Room[] Rooms;            // lista di tutte le room
     public Room PlayerRoom;         // la room corrente del giocatore (assegnata esternamente)
 
+    bool isCalculatingPath = false;
 
-    private void Update()
+
+
+    private void Start()
     {
-        if(NPC_Agent.hasPath)
+        Vector3 destination = GetRandomDestination();
+        NPC_Agent.SetDestination(destination);
+        /*
+        if (NPC_Agent.hasPath && isCalculatingPath)
         {
             Debug.Log("Agent has path");
+            isCalculatingPath = false;
             return;
         }
             
         else
         {
             Debug.Log("Agent HAS NOT path");
-            Vector3 destination = GetRandomDestination();
+            isCalculatingPath = true;
+            
             NPC_Agent.SetDestination(destination);
         }
+        */
     }
 
 
@@ -33,7 +42,7 @@ public class RoomManager : MonoBehaviour
 
         do         {
             randomRoom = Rooms[Random.Range(0, Rooms.Length)]; ;
-        } while (randomRoom != PlayerRoom);
+        } while (randomRoom == PlayerRoom);
         
 
         Interaction interaction = randomRoom.InteractionList [Random.Range(0, randomRoom.InteractionList.Count)];
