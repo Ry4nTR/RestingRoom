@@ -9,10 +9,6 @@ public class RoomManager : MonoBehaviour
     public Room[] Rooms;            // lista di tutte le room
     public Room PlayerRoom;         // la room corrente del giocatore (assegnata esternamente)
 
-    bool isCalculatingPath = false;
-
-
-
     private void Update()
     {
 
@@ -29,26 +25,22 @@ public class RoomManager : MonoBehaviour
         }
     }
 
-
     public Vector3 GetRandomDestination()
     {
         Room randomRoom;
 
         do
         {
-            randomRoom = Rooms[Random.Range(0, Rooms.Length)]; ;
-        } while (randomRoom == PlayerRoom);
+            randomRoom = Rooms[Random.Range(0, Rooms.Length)];
+        } 
+        while (randomRoom == PlayerRoom);
         
         if (randomRoom.InteractionList.Count == 0)
         {
             return GetRandomDestination();
         }
-        Interaction interaction = randomRoom.InteractionList [Random.Range(0, randomRoom.InteractionList.Count)];
+        Interaction interaction = randomRoom.InteractionList[Random.Range(0, randomRoom.InteractionList.Count)];
 
         return interaction.transform.position;
     }
-
-
-
-
 }

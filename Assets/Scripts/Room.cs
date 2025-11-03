@@ -9,10 +9,13 @@ public class Room : MonoBehaviour
     public enum Type { Fixed = 0, Mutant1 = 1, Mutant2 = 2}
 
     [SerializeField] private Type _roomType;
+    [SerializeField] private Transform _wrongDestination;
 
     [SerializeField] private List<Interaction> _interactionList;
 
     public IReadOnlyList<Interaction> InteractionList => _interactionList;
+    public Transform WrongDestination => _wrongDestination;
+
     public Type RoomType => _roomType;
 
     private void OnTriggerEnter(Collider other)
