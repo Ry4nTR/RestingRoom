@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Room : MonoBehaviour
 {
-    public event Action OnRoomEntered = delegate { };
+    public static event Action<Room> OnRoomEntered = delegate { };
 
     public enum Type { Fixed = 0, Mutant1 = 1, Mutant2 = 2}
 
@@ -14,4 +14,12 @@ public class Room : MonoBehaviour
 
     public IReadOnlyList<Interaction> InteractionList => _interactionList;
     public Type RoomType => _roomType;
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.GetComponentInParent<NPC_Controller>())
+        {
+            OnRoomEntered?.Invoke(this);
+        }
+    }
 }
