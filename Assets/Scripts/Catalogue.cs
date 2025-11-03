@@ -1,16 +1,12 @@
+using System;
 using UnityEngine;
 
 public class Catalogue : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    public static event Action<Room> OnCatalogueUpdated;
 
-    // Update is called once per frame
-    void Update()
+    void UpdateCatalogue(Room currentRoom)
     {
-        
+        OnCatalogueUpdated?.Invoke(currentRoom);
     }
 }
