@@ -13,26 +13,20 @@ public class RoomManager : MonoBehaviour
 
 
 
-    private void Start()
+    private void Update()
     {
-        Vector3 destination = GetRandomDestination();
-        NPC_Agent.SetDestination(destination);
-        /*
-        if (NPC_Agent.hasPath && isCalculatingPath)
+
+        if (NPC_Agent.hasPath)
         {
             Debug.Log("Agent has path");
-            isCalculatingPath = false;
             return;
-        }
-            
+        }  
         else
         {
             Debug.Log("Agent HAS NOT path");
-            isCalculatingPath = true;
-            
+            Vector3 destination = GetRandomDestination();
             NPC_Agent.SetDestination(destination);
         }
-        */
     }
 
 
@@ -40,11 +34,15 @@ public class RoomManager : MonoBehaviour
     {
         Room randomRoom;
 
-        do         {
+        do
+        {
             randomRoom = Rooms[Random.Range(0, Rooms.Length)]; ;
         } while (randomRoom == PlayerRoom);
         
-
+        if (randomRoom.InteractionList.Count == 0)
+        {
+            return GetRandomDestination();
+        }
         Interaction interaction = randomRoom.InteractionList [Random.Range(0, randomRoom.InteractionList.Count)];
 
         return interaction.transform.position;
