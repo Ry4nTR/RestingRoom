@@ -284,7 +284,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Room
   _roomType: 0
-  _interactionList: []
+  _interactionList:
+  - {fileID: 4160130605439893319}
 --- !u!114 &8559955707705909162
 MonoBehaviour:
   m_ObjectHideFlags: 0
