@@ -1,16 +1,17 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Room : MonoBehaviour
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
+    public event Action OnRoomEntered = delegate { };
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public enum Type { Fixed = 0, Mutant1 = 1, Mutant2 = 2}
+
+    [SerializeField] private Type _roomType;
+
+    [SerializeField] private List<Interaction> _interactionList;
+
+    public IReadOnlyList<Interaction> InteractionList => _interactionList;
+    public Type RoomType => _roomType;
 }
