@@ -2,6 +2,13 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 
+/// <summary>
+/// 1. Gestisce NPC trovando e assegnando destinazione causale.
+/// 2. Accende e spegne prefab stanze in base a Action event da Catalogue
+/// 3. Tiene traccia della stanza corrente del giocatore
+/// 4. Manda evento a WishManger quando roomManager decide destinazione random per NPC
+/// 5. Se random destination appartiene a una stanza disabilitata allora imposta come destinazione la stanza attiva (.
+/// </summary>>
 public class RoomManager : MonoBehaviour
 {
     public NavMeshAgent NPC_Agent;      // riferimento all'NCP da Inspector
@@ -9,9 +16,20 @@ public class RoomManager : MonoBehaviour
     public Room[] Rooms;            // lista di tutte le room
     public Room PlayerRoom;         // la room corrente del giocatore (assegnata esternamente)
 
-    bool isCalculatingPath = false;
+    private void Start()
+    {
+        Room.OnRoomEntered += HandleRoomEntered;
+    }
 
+    private void OnDestroy()
+    {
+        Room.OnRoomEntered -= HandleRoomEntered;
+    }
 
+    private void HandleRoomEntered(Room room)
+    {
+        PlayerRoom = room;
+    }
 
     private void Update()
     {
@@ -27,6 +45,8 @@ public class RoomManager : MonoBehaviour
             Vector3 destination = GetRandomDestination();
             NPC_Agent.SetDestination(destination);
         }
+
+
     }
 
 

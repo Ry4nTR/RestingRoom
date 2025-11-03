@@ -1,10 +1,10 @@
 using UnityEngine;
 
 /// <summary>
-/// Un trigger per segnalare alla stanza che NPC lo ha toccato
-/// Mantiene il testo del desiderio del NPC 
-/// </summary>
-public class Interaction : MonoBehaviour
+/// Gestisce e spawna gli wish come nuvolette su schermo
+/// Spawna questa nuvoletta quando riceve evento da RoomManager
+/// 
+public class WishManager : MonoBehaviour
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
