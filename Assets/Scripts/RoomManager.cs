@@ -13,9 +13,14 @@ public class RoomManager : MonoBehaviour
     private void Update()
     {
         if(NPC_Agent.hasPath)
+        {
+            Debug.Log("Agent has path");
             return;
+        }
+            
         else
         {
+            Debug.Log("Agent HAS NOT path");
             Vector3 destination = GetRandomDestination();
             NPC_Agent.SetDestination(destination);
         }
