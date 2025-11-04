@@ -26,9 +26,15 @@ public class PleasureManager : MonoBehaviour
     [Tooltip("Opzionale: sconto del conteggio errori dopo un successo (riduce penalità future).")]
     public int reduceMistakeCountOnSuccess = 1;
 
+    // Evento emesso quando la barra arriva a zero (invia una sola notifica finché non viene ripristinata)
+    public event Action OnPleasureDepleted = delegate { };
+
     // Runtime
     private float _currentPleasure;
     private int _mistakeCount = 0;
+
+    // evita di emettere l'evento ripetutamente finché non viene ripristinata la barra
+    private bool _depletedRaised = false;
 
     private void Start()
     {
@@ -38,6 +44,9 @@ public class PleasureManager : MonoBehaviour
         // inizializza barra
         _currentPleasure = Mathf.Clamp(startPleasure, 0f, maxPleasure);
         ApplyToUI();
+
+        // controlla se inizialmente è già a zero
+        CheckAndRaiseDepleted();
 
         // iscrizione all'evento (se disponibile)
         if (npcController != null)
@@ -76,6 +85,8 @@ public class PleasureManager : MonoBehaviour
         _currentPleasure = Mathf.Clamp(_currentPleasure - penalty, 0f, maxPleasure);
         ApplyToUI();
         Debug.Log($"[PleasureManager] Mistake #{_mistakeCount}: -{penalty:F1} pleasure -> {_currentPleasure:F1}/{maxPleasure}");
+
+        CheckAndRaiseDepleted();
     }
 
     private void ApplyReward()
@@ -90,6 +101,13 @@ public class PleasureManager : MonoBehaviour
 
         ApplyToUI();
         Debug.Log($"[PleasureManager] Success: +{baseReward:F1} pleasure -> {_currentPleasure:F1}/{maxPleasure} (mistakes={_mistakeCount})");
+
+        // se la barra è stata precedentemente a zero e ora risale, permetti future notifiche di depletion
+        if (_currentPleasure > 0f && _depletedRaised)
+        {
+            _depletedRaised = false;
+            Debug.Log("[PleasureManager] Pleasure restored above 0 -> depletion event reset.");
+        }
     }
 
     private void ApplyToUI()
@@ -98,6 +116,17 @@ public class PleasureManager : MonoBehaviour
         {
             pleasureBar.maxValue = maxPleasure;
             pleasureBar.value = _currentPleasure;
+        }
+    }
+
+    // Verifica lo stato della barra e emette evento se arriva a zero (una volta fino al ripristino)
+    private void CheckAndRaiseDepleted()
+    {
+        if (_currentPleasure <= 0f && !_depletedRaised)
+        {
+            _depletedRaised = true;
+            Debug.Log("[PleasureManager] Pleasure depleted -> emitting OnPleasureDepleted");
+            OnPleasureDepleted?.Invoke();
         }
     }
 
@@ -114,4 +143,5 @@ public class PleasureManager : MonoBehaviour
 
     public float CurrentPleasure => _currentPleasure;
     public int MistakeCount => _mistakeCount;
+    public bool IsDepleted => _depletedRaised;
 }

@@ -32,6 +32,14 @@ public class WishManager : MonoBehaviour
     public bool forceNextWishAfterCompletion = true;
     public bool showDebugLogs = true;
 
+    [Header("Initial Wish (Inspector)")]
+    [Tooltip("Se abilitato, all'avvio verrà forzata la wish impostata qui sotto.")]
+    public bool forceInitialWish = false;
+    [Tooltip("Interaction da forzare come primo wish. Se non è assegnata, nessuna wish verrà forzata.")]
+    public Interaction initialWishInteraction;
+    [Tooltip("Opzionale: Room della interaction. Se non impostata verrà risolta da initialWishInteraction.GetComponentInParent<Room>().")]
+    public Room initialWishRoom;
+
     // runtime
     private GameObject _currentBubble;
     private Coroutine _activeSequence;
@@ -39,6 +47,9 @@ public class WishManager : MonoBehaviour
 
     // testo corrente della bubble (per evitare log duplicati quando si aggiorna)
     private string _currentBubbleText = null;
+
+    // flag per tracciare che l'initial wish è stata forzata e non ancora completata (serve per comportamento post-fallimento)
+    private bool _initialWishActive = false;
 
     private void OnEnable()
     {
@@ -63,6 +74,31 @@ public class WishManager : MonoBehaviour
                 uiCanvasParent = c;
             }
         }
+
+        // Auto-assign npcController if missing and ensure subscription
+        if (npcController == null)
+        {
+            npcController = FindObjectOfType<NPC_Controller>();
+            if (npcController != null)
+            {
+                // avoid double subscription
+                npcController.OnDestinationReached -= HandleNpcDestinationReached;
+                npcController.OnDestinationReached += HandleNpcDestinationReached;
+            }
+            else
+            {
+                if (showDebugLogs) DebugLog("No NPC_Controller found in Start(); some behavior will be disabled.");
+            }
+        }
+        else
+        {
+            // ensure subscription
+            npcController.OnDestinationReached -= HandleNpcDestinationReached;
+            npcController.OnDestinationReached += HandleNpcDestinationReached;
+        }
+
+        // Se richiesto, forza la wish iniziale impostata dall'Inspector
+        TryForceInitialWish();
     }
 
     // Mostra la bubble quando RoomManager assegna una nuova destinazione
@@ -82,6 +118,23 @@ public class WishManager : MonoBehaviour
         else
         {
             if (showDebugLogs) DebugLog($"Task failed / wrong interaction: {touched?.name}");
+        }
+
+        // Se era l'initial wish forzata, e fallisce, abilitiamo la ricerca casuale successiva
+        if (_initialWishActive)
+        {
+            if (!success)
+            {
+                if (roomManager != null)
+                {
+                    roomManager.useRandomDestination = true;
+                    if (showDebugLogs) DebugLog("Initial forced wish failed -> switching to random destinations for subsequent choices.");
+                }
+            }
+
+            // Considieriamos l'initial wish consumata indipendentemente dal risultato
+            _initialWishActive = false;
+            forceInitialWish = false; // sicurezza ulteriore
         }
 
         // blocca RoomManager dall'assegnare nuove destinazioni durante la sequenza
@@ -104,14 +157,29 @@ public class WishManager : MonoBehaviour
 
         if (showDebugLogs) DebugLog("Task finished -> starting roaming in current room");
 
+        // compute speed factor from NPC to scale durations (higher speed => shorter durations)
+        float speedFactor =1f;
+        if (npcController != null)
+        {
+            try { speedFactor = Mathf.Max(0.0001f, npcController.GetSpeedFactor()); } catch { speedFactor =1f; }
+        }
+
+        if (showDebugLogs) DebugLog($"Speed factor: {speedFactor:F2} (Agent speed {npcController?.Agent?.speed:F2} / base {(npcController != null ? npcController.GetSpeedFactor() * npcController.baseSpeed :0f)})");
+
+        // scale lookAround and thinking durations inversely with speedFactor
+        float scaledLookAround = (lookAroundDuration >0f) ? (lookAroundDuration / speedFactor) :0f;
+        float scaledThinking = Mathf.Max(0.05f, thinkingDuration / speedFactor);
+
+        if (showDebugLogs) DebugLog($"Scaled timings: lookAround={scaledLookAround:F2}s, thinking={scaledThinking:F2}s (orig lookAround={lookAroundDuration:F2}, thinking={thinkingDuration:F2})");
+
         // look around: piccoli spostamenti navmesh (wander) nella stanza corrente
-        if (npcController != null && lookAroundDuration > 0f)
+        if (npcController != null && scaledLookAround > 0f)
         {
             if (showDebugLogs) DebugLog("NPC looking around...");
-            // start wander for lookAroundDuration within wanderRadius
-            npcController.StartWander(lookAroundDuration, wanderRadius);
+            // start wander for scaledLookAround within wanderRadius
+            npcController.StartWander(scaledLookAround, wanderRadius);
             // attendi la durata del lookAround (il wander agisce in background)
-            float timer = lookAroundDuration;
+            float timer = scaledLookAround;
             while (timer > 0f)
             {
                 timer -= Time.deltaTime;
@@ -124,7 +192,7 @@ public class WishManager : MonoBehaviour
 
         // thinking: rotazione lenta come riflessione (azione visiva breve)
         if (showDebugLogs) DebugLog("NPC thinking...");
-        float thinkTimer = thinkingDuration;
+        float thinkTimer = scaledThinking;
         while (thinkTimer > 0f)
         {
             if (npcController != null && npcController.gameObject != null)
@@ -261,7 +329,7 @@ public class WishManager : MonoBehaviour
             return;
         }
 
-        var pair = roomManager.GetRandomInteractionAndRoom();
+        var pair = room_manager_GetRandomInteractionAndRoom();
         if (pair.Item1 != null && pair.Item2 != null)
         {
             npcController.SetDestination(pair.Item1, pair.Item2);
@@ -269,8 +337,61 @@ public class WishManager : MonoBehaviour
         }
     }
 
+    // Prova a forzare la wish iniziale se abilitata dall'Inspector
+    private void TryForceInitialWish()
+    {
+        if (!forceInitialWish) return;
+
+        if (initialWishInteraction == null)
+        {
+            if (showDebugLogs) DebugLog("forceInitialWish abilitato ma initialWishInteraction non impostata; skipping.");
+            return;
+        }
+
+        // risolvi la room se non impostata esplicitamente
+        Room resolvedRoom = initialWishRoom ?? initialWishInteraction.GetComponentInParent<Room>();
+        if (resolvedRoom == null)
+        {
+            if (showDebugLogs) DebugLog("Impossibile risolvere la Room per initialWishInteraction; skipping force.");
+            return;
+        }
+
+        // assicurati di avere un NPC_Controller; prova a risolverlo se non assegnato
+        if (npcController == null)
+        {
+            npcController = FindObjectOfType<NPC_Controller>();
+            if (npcController == null)
+            {
+                if (showDebugLogs) DebugLog("Nessun NPC_Controller trovato per forzare la initial wish; skipping.");
+                return;
+            }
+            else
+            {
+                // iscriviti all'evento se necessario
+                npcController.OnDestinationReached += HandleNpcDestinationReached;
+            }
+        }
+
+        // imposta destinazione e notifica subito l'evento per mostrare la bubble
+        npcController.SetDestination(initialWishInteraction, resolvedRoom);
+        RoomManager.RaiseOnNpcNewDestination(initialWishInteraction, resolvedRoom);
+
+        if (showDebugLogs) DebugLog($"Initial forced wish: '{initialWishInteraction.name}' in Room '{resolvedRoom.name}'");
+
+        // marca che l'initial wish è attiva e consumabile
+        _initialWishActive = true;
+        forceInitialWish = false; // disabilita per evitare ripetizioni
+    }
+
     private void DebugLog(string msg)
     {
         Debug.Log($"[WishManager | {DateTime.Now:HH:mm:ss}] {msg}");
+    }
+
+    // small helper to avoid mangling call in ForceNextWishNow edit
+    private (Interaction, Room) room_manager_GetRandomInteractionAndRoom()
+    {
+        if (roomManager == null) return (null, null);
+        return roomManager.GetRandomInteractionAndRoom();
     }
 }

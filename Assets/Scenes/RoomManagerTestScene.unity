@@ -532,7 +532,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WishManager
   roomManager: {fileID: 1370560794}
   npcController: {fileID: 8620692951429009082}
-  uiCanvasParent: {fileID: 0}
+  uiCanvasParent: {fileID: 8676924799748319926}
   wishBubblePrefab: {fileID: 1293656233}
   bubbleScreenPosition: {x: -150, y: 200}
   showDuration: 3
@@ -543,6 +543,9 @@ MonoBehaviour:
   thinkingDecayMultiplier: 0.95
   forceNextWishAfterCompletion: 1
   showDebugLogs: 1
+  forceInitialWish: 0
+  initialWishInteraction: {fileID: 1246539206}
+  initialWishRoom: {fileID: 748991578}
 --- !u!1 &678601734
 GameObject:
   m_ObjectHideFlags: 0
@@ -1010,7 +1013,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 478656f276067c545810257eb77a51ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Room
-  _roomType: 0
+  _roomType: 1
   _interactionList:
   - {fileID: 1246539206}
   - {fileID: 1656077786}
@@ -1383,7 +1386,7 @@ Transform:
   m_GameObject: {fileID: 932209120}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.87, y: 0, z: 18.7}
+  m_LocalPosition: {x: -15.79, y: 0, z: -13.23}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1893,8 +1896,8 @@ Transform:
   m_GameObject: {fileID: 1246539204}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.75, y: 1, z: 3.21}
-  m_LocalScale: {x: 2.59, y: 2.59, z: 2.59}
+  m_LocalPosition: {x: -4.33, y: 0.13, z: -2.851}
+  m_LocalScale: {x: 0.7769223, y: 0.7769223, z: 0.7769223}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 748991577}
@@ -1911,7 +1914,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 335e1009378af024cbb626a39cdb5d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Interaction
-  wishText: Fumiamo un bel sigaro
+  wishText: "suoniamo un p\xF2 la chitarra"
   isTrigger: 1
 --- !u!65 &1246539207
 BoxCollider:
@@ -2059,13 +2062,13 @@ MonoBehaviour:
   NPC_Controller: {fileID: 8620692951429009082}
   Rooms:
   - {fileID: 6550848757282317772}
-  - {fileID: 6109417502586883080}
-  - {fileID: 735202232}
   - {fileID: 678601741}
   - {fileID: 1632652927}
+  - {fileID: 735202232}
   - {fileID: 748991578}
+  - {fileID: 6109417502586883080}
   useRandomDestination: 1
-  tempRoomIndex: 5
+  tempRoomIndex: 4
 --- !u!4 &1370560795
 Transform:
   m_ObjectHideFlags: 0
@@ -2442,8 +2445,8 @@ Transform:
   m_GameObject: {fileID: 1656077784}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4, y: 4.12, z: -3.86}
-  m_LocalScale: {x: 1, y: 8.7225, z: 1}
+  m_LocalPosition: {x: -1.87, y: 2.05, z: 4.29}
+  m_LocalScale: {x: 0.52624, y: 4.5901284, z: 0.52624}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 748991577}
@@ -2460,7 +2463,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 335e1009378af024cbb626a39cdb5d64, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Interaction
-  wishText: Leggiamo un bel libro
+  wishText: "Ascoltiamo un p\xF2 di musica"
   isTrigger: 1
 --- !u!65 &1656077787
 BoxCollider:
@@ -3423,6 +3426,14 @@ PrefabInstance:
       propertyPath: m_StoppingDistance
       value: 5
       objectReference: {fileID: 0}
+    - target: {fileID: 5219162830506463703, guid: e00aa56fd2ba7ab499db28284ff1243b, type: 3}
+      propertyPath: maxSpeed
+      value: 15
+      objectReference: {fileID: 0}
+    - target: {fileID: 5219162830506463703, guid: e00aa56fd2ba7ab499db28284ff1243b, type: 3}
+      propertyPath: baseSpeed
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 7578130961552297479, guid: e00aa56fd2ba7ab499db28284ff1243b, type: 3}
       propertyPath: m_Name
       value: NPC
@@ -3572,6 +3583,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a36cf0aea7a684e4b9f59ce0a01c2c39, type: 3}
+--- !u!223 &8676924799748319926 stripped
+Canvas:
+  m_CorrespondingSourceObject: {fileID: 2861723252565767071, guid: a36cf0aea7a684e4b9f59ce0a01c2c39, type: 3}
+  m_PrefabInstance: {fileID: 8676924799748319925}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &8713157653790574412
 MonoBehaviour:
   m_ObjectHideFlags: 0
