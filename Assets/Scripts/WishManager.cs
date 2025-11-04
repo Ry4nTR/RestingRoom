@@ -359,7 +359,7 @@ public class WishManager : MonoBehaviour
         // assicurati di avere un NPC_Controller; prova a risolverlo se non assegnato
         if (npcController == null)
         {
-            npcController = FindObjectOfType<NPC_Controller>();
+            npcController = FindFirstObjectByType<NPC_Controller>();
             if (npcController == null)
             {
                 if (showDebugLogs) DebugLog("Nessun NPC_Controller trovato per forzare la initial wish; skipping.");
