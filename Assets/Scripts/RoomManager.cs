@@ -92,19 +92,31 @@ public class RoomManager : MonoBehaviour
         }
     }
 
+    [SerializeField] public bool useRandomDestination = false;
+    [SerializeField] public int tempRoomIndex = 0;
     public (Interaction, Room) GetRandomInteractionAndRoom()
-
     {
+
+
         if (Rooms == null || Rooms.Length == 0) return (null, null);
 
         Room randomRoom = null;
-        int attempts = 0;
-        do
+        if (useRandomDestination)
         {
-            randomRoom = Rooms[UnityEngine.Random.Range(0, Rooms.Length)];
-            attempts++;
-            if (attempts > 50) break; // sicurezza: esci se non trovi nulla di valido
-        } while ((randomRoom == PlayerRoom) || !randomRoom.gameObject.activeInHierarchy || randomRoom.InteractionList.Count == 0);
+            int attempts = 0;
+            do
+            {
+                randomRoom = Rooms[UnityEngine.Random.Range(0, Rooms.Length)];
+                attempts++;
+                if (attempts > 50) break; // sicurezza: esci se non trovi nulla di valido
+            } while ((randomRoom == PlayerRoom) || !randomRoom.gameObject.activeInHierarchy || randomRoom.InteractionList.Count == 0);
+        }
+        else
+        {
+            randomRoom = Rooms[tempRoomIndex];
+        }
+
+        
 
 
 
@@ -123,7 +135,7 @@ public class RoomManager : MonoBehaviour
         return (pair.Item1 != null) ? pair.Item1.transform.position : transform.position;
     }
 
-    public void ApplyCataloguePreference(Room.Type preferredType)
+    public void ApplyCataloguePreference(Room.HouseSection preferredType)
     {
         foreach (var r in Rooms)
         {

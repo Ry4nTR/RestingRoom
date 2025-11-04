@@ -23,14 +23,17 @@ public class Room : MonoBehaviour
     // Evento emesso quando l'NPC tocca una Interaction in questa room
     public static event Action<Room, Interaction> OnInteractionTriggeredByNPC = delegate { };
 
-    public enum Type { Fixed = 0, Mutant1 = 1, Mutant2 = 2 }
+    public enum HouseSection { Fixed = 0, Mutant1 = 1, Mutant2 = 2 }
 
-    [SerializeField] private Type _roomType;
+    [SerializeField] private HouseSection _roomType;
     [SerializeField] private List<Interaction> _interactionList = new List<Interaction>();
+    [SerializeField] private Transform WrongDestination;
+
+    public Transform wrongdestination => WrongDestination;
 
     // Esposizione readonly della lista di interaction (RoomManager la usa per scegliere destinazioni)
     public IReadOnlyList<Interaction> InteractionList => _interactionList;
-    public Type RoomType => _roomType;
+    public HouseSection RoomType => _roomType;
 
     private void Reset()
     {

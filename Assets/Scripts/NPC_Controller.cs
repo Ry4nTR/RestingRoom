@@ -100,6 +100,11 @@ public class NPC_Controller : MonoBehaviour
             return;
         }
 
+        if (targetRoom.gameObject.activeInHierarchy && (targetRoom.RoomType is not Room.HouseSection.Fixed))
+        {   
+            Agent.SetDestination(targetRoom.wrongdestination.position);
+        }
+
         // interrompe eventuale wander
         StopWander();
 
