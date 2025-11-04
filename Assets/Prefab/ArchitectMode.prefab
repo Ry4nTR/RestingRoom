@@ -1320,6 +1320,9 @@ MonoBehaviour:
     - m_Text: Pool Room
       m_Image: {fileID: 0}
       m_Color: {r: 1, g: 1, b: 1, a: 1}
+    - m_Text: Dancing Room
+      m_Image: {fileID: 0}
+      m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -1337,6 +1340,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RoomSelector
   rooms: []
+  roomManager: {fileID: 0}
 --- !u!1 &3993828594645310348
 GameObject:
   m_ObjectHideFlags: 0
@@ -2746,6 +2750,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RoomSelector
   rooms: []
+  roomManager: {fileID: 0}
 --- !u!1 &7691793890776801665
 GameObject:
   m_ObjectHideFlags: 0
