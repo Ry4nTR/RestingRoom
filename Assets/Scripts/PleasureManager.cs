@@ -27,7 +27,7 @@ public class PleasureManager : MonoBehaviour
     public int reduceMistakeCountOnSuccess = 1;
 
     // Evento emesso quando la barra arriva a zero (invia una sola notifica finché non viene ripristinata)
-    public event Action OnPleasureDepleted = delegate { };
+    public static event Action OnPleasureDepleted = delegate { };
 
     // Runtime
     private float _currentPleasure;
@@ -38,6 +38,7 @@ public class PleasureManager : MonoBehaviour
 
     private void Start()
     {
+        Time.timeScale = 1;
         // Auto-assign NPC_Controller se non impostato in inspector (comodità)
         npcController = FindFirstObjectByType<NPC_Controller>();
 

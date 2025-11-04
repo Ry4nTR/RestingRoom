@@ -1251,9 +1251,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WishManager
   roomManager: {fileID: 1370560794}
   npcController: {fileID: 8620692951429009082}
-  uiCanvasParent: {fileID: 0}
-  wishBubblePrefab: {fileID: 1293656233}
-  bubbleScreenPosition: {x: -150, y: 200}
+  uiCanvasParent: {fileID: 1293656236}
+  wishBubblePrefab: {fileID: 6106835218821507428, guid: 6cd693fbef5e8804298531468f125616, type: 3}
+  bubbleScreenPosition: {x: -100, y: -100}
   showDuration: 3
   lookAroundDuration: 5
   wanderRadius: 10
@@ -2726,9 +2726,9 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1388689835}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1293656233 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5809985894388768317, guid: a36cf0aea7a684e4b9f59ce0a01c2c39, type: 3}
+--- !u!223 &1293656236 stripped
+Canvas:
+  m_CorrespondingSourceObject: {fileID: 2861723252565767071, guid: a36cf0aea7a684e4b9f59ce0a01c2c39, type: 3}
   m_PrefabInstance: {fileID: 8676924799748319925}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &1302104321
@@ -5437,6 +5437,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1669160654082160079, guid: a36cf0aea7a684e4b9f59ce0a01c2c39, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1669160654082160079, guid: a36cf0aea7a684e4b9f59ce0a01c2c39, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2861723252565767071, guid: a36cf0aea7a684e4b9f59ce0a01c2c39, type: 3}
       propertyPath: m_AdditionalShaderChannelsFlag
       value: 25

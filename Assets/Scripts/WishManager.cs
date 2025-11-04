@@ -289,7 +289,7 @@ public class WishManager : MonoBehaviour
     {
         if (bubble == null) return;
 
-        var txt = bubble.GetComponentInChildren<UnityEngine.UI.Text>();
+        var txt = bubble.GetComponentInChildren<TMPro.TextMeshProUGUI>();
         if (txt != null)
         {
             txt.text = text;

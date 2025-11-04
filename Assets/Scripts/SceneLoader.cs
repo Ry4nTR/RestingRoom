@@ -12,4 +12,9 @@ public class SceneLoader : MonoBehaviour
     {
         Application.Quit();
     }
+
+    public void ReplayGame()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
 }

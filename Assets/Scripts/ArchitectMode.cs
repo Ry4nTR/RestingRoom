@@ -1,5 +1,15 @@
 using UnityEngine;
 
+public static class ExtensionClass
+{
+    public static void SetCanvasGroup(this CanvasGroup canvasGroup, bool isActive)
+    {
+        canvasGroup.interactable = isActive;
+        canvasGroup.alpha = isActive ? 1 : 0;
+        canvasGroup.blocksRaycasts = isActive;
+    }
+}
+
 public class ArchitectMode : MonoBehaviour
 {
     private CanvasGroup canvasGroup;
@@ -27,9 +37,7 @@ public class ArchitectMode : MonoBehaviour
 
     private void SetMinimapStatus(bool newStatus)
     {
-        canvasGroup.interactable = newStatus;
-        canvasGroup.alpha = newStatus ? 1 : 0;
-        canvasGroup.blocksRaycasts = newStatus;
+        canvasGroup.SetCanvasGroup(newStatus);
 
         status = newStatus;
     }
