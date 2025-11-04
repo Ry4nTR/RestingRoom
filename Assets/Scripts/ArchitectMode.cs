@@ -17,8 +17,10 @@ public class ArchitectMode : MonoBehaviour
 
     private void Update()
     {
-        if(Input.GetKeyDown(KeyCode.Tab))
+        //se premi TAB apri Architect Mode
+        if (Input.GetKeyDown(KeyCode.V))
         {
+            Debug.Log("Toggled Architect Mode");
             SetMinimapStatus(!status);
         }
     }
