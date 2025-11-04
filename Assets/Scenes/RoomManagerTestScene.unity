@@ -2688,7 +2688,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Room
   _roomType: 0
   _interactionList:
-  - {fileID: 0}
+  - {fileID: 1994036901}
 --- !u!64 &6172900015010975575
 MeshCollider:
   m_ObjectHideFlags: 0
