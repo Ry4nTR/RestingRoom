@@ -3478,6 +3478,10 @@ PrefabInstance:
       propertyPath: m_AnchorMin.x
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2861723252565767071, guid: a36cf0aea7a684e4b9f59ce0a01c2c39, type: 3}
+      propertyPath: m_AdditionalShaderChannelsFlag
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 4961912963275802784, guid: a36cf0aea7a684e4b9f59ce0a01c2c39, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -3575,6 +3579,14 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6212877421064346532, guid: a36cf0aea7a684e4b9f59ce0a01c2c39, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7442870966851319791, guid: a36cf0aea7a684e4b9f59ce0a01c2c39, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7442870966851319791, guid: a36cf0aea7a684e4b9f59ce0a01c2c39, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
