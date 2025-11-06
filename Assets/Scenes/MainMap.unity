@@ -426,8 +426,8 @@ MonoBehaviour:
   roomManager: {fileID: 1370560794}
   npcController: {fileID: 8620692951429009082}
   uiCanvasParent: {fileID: 1293656236}
-  wishBubblePrefab: {fileID: 1293656233}
-  bubbleScreenPosition: {x: -150, y: 200}
+  wishBubblePrefab: {fileID: 6106835218821507428, guid: 6cd693fbef5e8804298531468f125616, type: 3}
+  bubbleScreenPosition: {x: -75, y: -75}
   showDuration: 3
   lookAroundDuration: 5
   wanderRadius: 10
@@ -600,11 +600,6 @@ Transform:
   - {fileID: 670452518}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1293656233 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 5809985894388768317, guid: a36cf0aea7a684e4b9f59ce0a01c2c39, type: 3}
-  m_PrefabInstance: {fileID: 8676924799748319925}
-  m_PrefabAsset: {fileID: 0}
 --- !u!223 &1293656236 stripped
 Canvas:
   m_CorrespondingSourceObject: {fileID: 2861723252565767071, guid: a36cf0aea7a684e4b9f59ce0a01c2c39, type: 3}
