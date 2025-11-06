@@ -404,6 +404,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1293571370164986580, guid: f11b84a491dd55e49a0725c2e3ece7d6, type: 3}
+      propertyPath: rooms.Array.size
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 4466492083778452428, guid: f11b84a491dd55e49a0725c2e3ece7d6, type: 3}
       propertyPath: m_Name
       value: ArchitectMode

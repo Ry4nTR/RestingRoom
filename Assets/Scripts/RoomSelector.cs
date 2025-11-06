@@ -9,8 +9,8 @@ public class RoomSelector : MonoBehaviour
     // Popola manualmente questa lista dall'Inspector.
     [SerializeField] private List<Room> rooms = new List<Room>();
 
-    // Assegna manualmente il RoomManager dall'Inspector (usiamo PlayerRoom per impedire il cambio quando il player è dentro una stanza).
-    [SerializeField] private RoomManager roomManager;
+    // Assegna automaticamente il RoomManager (usiamo PlayerRoom per impedire il cambio quando il player è dentro una stanza).
+    private RoomManager roomManager;
 
     private TMP_Dropdown selectorDropdown;
 
@@ -19,6 +19,7 @@ public class RoomSelector : MonoBehaviour
 
     private void Awake()
     {
+        roomManager = FindFirstObjectByType<RoomManager>();
         selectorDropdown = GetComponent<TMP_Dropdown>();
         if (selectorDropdown == null)
         {

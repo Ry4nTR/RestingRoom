@@ -1314,9 +1314,6 @@ MonoBehaviour:
   m_MultiSelect: 0
   m_Options:
     m_Options:
-    - m_Text: Main Room
-      m_Image: {fileID: 0}
-      m_Color: {r: 1, g: 1, b: 1, a: 1}
     - m_Text: Pool Room
       m_Image: {fileID: 0}
       m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -2730,7 +2727,7 @@ MonoBehaviour:
     - m_Text: Bedroom
       m_Image: {fileID: 0}
       m_Color: {r: 1, g: 1, b: 1, a: 1}
-    - m_Text: Occult room
+    - m_Text: Occult Room
       m_Image: {fileID: 0}
       m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_OnValueChanged:
@@ -2749,7 +2746,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f43ad09496c47d448aeb3a0ee2311f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RoomSelector
-  rooms: []
+  rooms:
+  - {fileID: 0}
+  - {fileID: 0}
   roomManager: {fileID: 0}
 --- !u!1 &7691793890776801665
 GameObject:
