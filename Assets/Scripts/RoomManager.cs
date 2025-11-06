@@ -4,10 +4,10 @@ using UnityEngine;
 using UnityEngine.AI;
 
 /// <summary>
-/// RoomManager � responsabilit� e flusso eventi:
-/// - Tiene la lista delle `Room` presenti nella scena e pu� attivarle/disattivarle in base alle preferenze del `Catalogue`.
+/// RoomManager — responsabilità e flusso eventi:
+/// - Tiene la lista delle `Room` presenti nella scena e può attivarle/disattivarle in base alle preferenze del `Catalogue`.
 /// - Assegna destinazioni casuali all'NPC scegliendo una `Interaction` all'interno di una `Room` valida.
-/// - Tiene traccia della `PlayerRoom` ascoltando l'evento statico `Room.OnRoomEntered` (la Room in cui � entrato il player).
+/// - Tiene traccia della `PlayerRoom` ascoltando l'evento statico `Room.OnRoomEntered` (la Room in cui è entrato il player).
 /// - Emana l'evento statico `OnNpcNewDestination` quando seleziona una nuova `Interaction`/Room per l'NPC.
 /// </summary>
 public class RoomManager : MonoBehaviour
@@ -20,7 +20,7 @@ public class RoomManager : MonoBehaviour
     // Stato runtime
     [NonSerialized] public Room PlayerRoom; // la room corrente del player (aggiornata da Room.OnRoomEntered)
 
-    // Evento pubblico: notifica a sistemi esterni (WishManager / UI) quale Interaction/Room � stata scelta per l'NPC.
+    // Evento pubblico: notifica a sistemi esterni (WishManager / UI) quale Interaction/Room è stata scelta per l'NPC.
     // Firma: (Interaction scelta, Room contenente l'interaction)
     public static event Action<Interaction, Room> OnNpcNewDestination = delegate { };
 
@@ -70,19 +70,13 @@ public class RoomManager : MonoBehaviour
             Vector3 dest = GetRandomDestination();
             NPC_Agent.SetDestination(dest);
             return;
-
-
-
-
-
-
         }
 
-        // Evita di assegnare se l'agent sta navigando o � occupato (task/roam/think)
+        // Evita di assegnare se l'agent sta navigando o è occupato (task/roam/think)
         if (NPC_Controller.Agent != null && (NPC_Controller.Agent.hasPath || NPC_Controller.IsBusy))
             return;
 
-        // Se non ha percorso e non � busy, selezioniamo una Interaction e Room valide e assegniamo come destinazione
+        // Se non ha percorso e non è busy, selezioniamo una Interaction e Room valide e assegniamo come destinazione
         (Interaction interaction, Room room) = GetRandomInteractionAndRoom();
         if (interaction != null && room != null)
         {
@@ -96,8 +90,6 @@ public class RoomManager : MonoBehaviour
     [SerializeField] public int tempRoomIndex = 0;
     public (Interaction, Room) GetRandomInteractionAndRoom()
     {
-
-
         if (Rooms == null || Rooms.Length == 0) return (null, null);
 
         Room randomRoom = null;
@@ -109,21 +101,18 @@ public class RoomManager : MonoBehaviour
                 randomRoom = Rooms[UnityEngine.Random.Range(0, Rooms.Length)];
                 attempts++;
                 if (attempts > 50) break; // sicurezza: esci se non trovi nulla di valido
-            } while ((randomRoom == PlayerRoom) || !randomRoom.gameObject.activeInHierarchy || randomRoom.InteractionList.Count == 0);
+            }
+            // NOTE: rimosso il controllo su randomRoom.gameObject.activeInHierarchy per permettere
+            // che anche le Room non attive nella gerarchia possano essere selezionate.
+            // Manteniamo comunque l'esclusione della PlayerRoom e delle stanze senza interaction.
+            while ((randomRoom == PlayerRoom) || randomRoom.InteractionList.Count == 0);
         }
         else
         {
             randomRoom = Rooms[tempRoomIndex];
         }
 
-        
-
-
-
-
-
         if (randomRoom == null || randomRoom.InteractionList.Count == 0) return (null, null);
-
 
         Interaction chosen = randomRoom.InteractionList[UnityEngine.Random.Range(0, randomRoom.InteractionList.Count)];
         return (chosen, randomRoom);
