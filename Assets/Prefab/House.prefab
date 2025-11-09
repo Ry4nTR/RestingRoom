@@ -2511,7 +2511,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Interaction
   wishText: "I need to reflect\u2026 with the sound of balls hitting each other."
-  isTrigger: 1
 --- !u!1 &556945224738659275
 GameObject:
   m_ObjectHideFlags: 0
@@ -2815,7 +2814,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Interaction
   wishText: ' I need to discover if I am a Virgin or just naive.'
-  isTrigger: 1
 --- !u!1 &592989968984416747
 GameObject:
   m_ObjectHideFlags: 0
@@ -3100,11 +3098,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 478656f276067c545810257eb77a51ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Room
-  _roomType: 1
-  _interactionList:
-  - {fileID: 4560235338133181298}
-  - {fileID: 317978881185115033}
-  WrongDestination: {fileID: 8104981728941660055}
+  type: 0
+  wrongDestinationPoint: {fileID: 0}
+  interactions: []
 --- !u!1 &657666335344533451
 GameObject:
   m_ObjectHideFlags: 0
@@ -7483,12 +7479,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2133213472378952092}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 17.492, y: -0.02, z: -0.9769995}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -1.5210218, y: -0.014864225, z: -2.508}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 3252837918433387527}
+  m_Father: {fileID: 3359178242782730925}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2175165620605269977
 GameObject:
@@ -8060,7 +8056,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Interaction
   wishText: I need to feed my stomach otherwise it will start to feed on me.
-  isTrigger: 1
 --- !u!1 &2239889461006730923
 GameObject:
   m_ObjectHideFlags: 0
@@ -8378,7 +8373,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Interaction
   wishText: I want to appear smarter while I waste time.
-  isTrigger: 1
 --- !u!1 &2303672976694564247
 GameObject:
   m_ObjectHideFlags: 0
@@ -9247,7 +9241,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Interaction
   wishText: I have to go to sleep
-  isTrigger: 1
 --- !u!1 &2582717147349168615
 GameObject:
   m_ObjectHideFlags: 0
@@ -9729,7 +9722,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Interaction
   wishText: I need to make the Gordon Ramsay inside me happy
-  isTrigger: 1
 --- !u!1 &2764907835257944161
 GameObject:
   m_ObjectHideFlags: 0
@@ -11177,7 +11169,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Interaction
   wishText: " I feel a strange energy\u2026"
-  isTrigger: 1
 --- !u!1 &3317386065603534449
 GameObject:
   m_ObjectHideFlags: 0
@@ -12116,7 +12107,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Interaction
   wishText: I need to contact the me of 2008 and persuade him to buy 100 Bitcoin.
-  isTrigger: 1
 --- !u!1 &3620697535682344690
 GameObject:
   m_ObjectHideFlags: 0
@@ -13856,11 +13846,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 478656f276067c545810257eb77a51ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Room
-  _roomType: 1
-  _interactionList:
-  - {fileID: 2070924029509667705}
-  - {fileID: 5963192039725740476}
-  WrongDestination: {fileID: 8104981728941660055}
+  type: 0
+  wrongDestinationPoint: {fileID: 0}
+  interactions: []
 --- !u!1 &4290108173038055802
 GameObject:
   m_ObjectHideFlags: 0
@@ -14820,7 +14808,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Interaction
   wishText: I need more motion in my life. Vertical, on a pole.
-  isTrigger: 1
 --- !u!1 &4661172832366474516
 GameObject:
   m_ObjectHideFlags: 0
@@ -17174,6 +17161,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 87585402970189402}
+  - {fileID: 4366762519028506031}
   m_Father: {fileID: 3252837918433387527}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!114 &3108964795740914085
@@ -17245,12 +17233,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 478656f276067c545810257eb77a51ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Room
-  _roomType: 2
-  _interactionList:
-  - {fileID: 5150840699209053608}
-  - {fileID: 8072954556173759035}
-  - {fileID: 3188581742746110513}
-  WrongDestination: {fileID: 6529669604295432899}
+  type: 0
+  wrongDestinationPoint: {fileID: 0}
+  interactions: []
 --- !u!1 &5716680767804225969
 GameObject:
   m_ObjectHideFlags: 0
@@ -22500,10 +22485,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 478656f276067c545810257eb77a51ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Room
-  _roomType: 0
-  _interactionList:
-  - {fileID: 6741448816552966476}
-  WrongDestination: {fileID: 0}
+  type: 0
+  wrongDestinationPoint: {fileID: 0}
+  interactions: []
 --- !u!114 &3805473295315613897
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22628,7 +22612,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Interaction
   wishText: ' I need to pee in the bathtub'
-  isTrigger: 1
 --- !u!1 &7177022931810240893
 GameObject:
   m_ObjectHideFlags: 0
@@ -24691,10 +24674,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 478656f276067c545810257eb77a51ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Room
-  _roomType: 2
-  _interactionList:
-  - {fileID: 7987238535039179009}
-  WrongDestination: {fileID: 6529669604295432899}
+  type: 0
+  wrongDestinationPoint: {fileID: 0}
+  interactions: []
 --- !u!114 &3305763888973152037
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -24801,11 +24783,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 478656f276067c545810257eb77a51ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Room
-  _roomType: 0
-  _interactionList:
-  - {fileID: 6279841123305730362}
-  - {fileID: 1639544324112760011}
-  WrongDestination: {fileID: 0}
+  type: 0
+  wrongDestinationPoint: {fileID: 0}
+  interactions: []
 --- !u!114 &4495981906774226806
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25744,7 +25724,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Interaction
   wishText: ' I need to do some networking, with a nice drink beside me'
-  isTrigger: 1
 --- !u!1 &8062370630147444784
 GameObject:
   m_ObjectHideFlags: 0
@@ -29092,7 +29071,6 @@ Transform:
   m_Children:
   - {fileID: 2998442227555702521}
   - {fileID: 3359178242782730925}
-  - {fileID: 4366762519028506031}
   - {fileID: 806034209999398648}
   m_Father: {fileID: 5940277902179773680}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}

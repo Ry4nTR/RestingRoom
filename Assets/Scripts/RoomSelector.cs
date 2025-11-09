@@ -128,13 +128,11 @@ public class RoomSelector : MonoBehaviour
             {
                 // Attivazione stanza selezionata
                 r.gameObject.SetActive(true);
-                Debug.Log($"RoomSelector: Attivata stanza '{r.gameObject.name}' (index {i}).");
             }
             else if (!shouldBeActive && currentlyActive)
             {
                 // Disattivazione delle altre stanze
                 r.gameObject.SetActive(false);
-                Debug.Log($"RoomSelector: Disattivata stanza '{r.gameObject.name}' (index {i}).");
             }
             // se shouldBeActive == currentlyActive non facciamo nulla
         }

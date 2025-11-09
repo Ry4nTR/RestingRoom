@@ -1,138 +1,149 @@
-﻿using System;
-using System.Linq;
+﻿// RoomManager.cs
 using UnityEngine;
-using UnityEngine.AI;
+using System;
 
-/// <summary>
-/// RoomManager — responsabilità e flusso eventi:
-/// - Tiene la lista delle `Room` presenti nella scena e può attivarle/disattivarle in base alle preferenze del `Catalogue`.
-/// - Assegna destinazioni casuali all'NPC scegliendo una `Interaction` all'interno di una `Room` valida.
-/// - Tiene traccia della `PlayerRoom` ascoltando l'evento statico `Room.OnRoomEntered` (la Room in cui è entrato il player).
-/// - Emana l'evento statico `OnNpcNewDestination` quando seleziona una nuova `Interaction`/Room per l'NPC.
-/// </summary>
 public class RoomManager : MonoBehaviour
 {
-    // Riferimenti di scena (configurati in Inspector)
-    public NavMeshAgent NPC_Agent;
-    public NPC_Controller NPC_Controller;
-    public Room[] Rooms; // lista di tutte le room disponibili nella scena
+    [Header("References")]
+    public NPC_Controller npcController;
+    public WishManager wishManager;
 
-    // Stato runtime
-    [NonSerialized] public Room PlayerRoom; // la room corrente del player (aggiornata da Room.OnRoomEntered)
+    [Header("Rooms")]
+    public Room[] allRooms;
 
-    // Evento pubblico: notifica a sistemi esterni (WishManager / UI) quale Interaction/Room è stata scelta per l'NPC.
-    // Firma: (Interaction scelta, Room contenente l'interaction)
-    public static event Action<Interaction, Room> OnNpcNewDestination = delegate { };
+    // Runtime state
+    public Room PlayerRoom { get; private set; }
+    public Room CurrentTargetRoom { get; private set; }
+    public Interaction CurrentTargetInteraction { get; private set; }
 
-    // Public helper: permette ad altri oggetti di richiedere l'emissione dell'evento senza invocare l'evento direttamente.
-    // Gli eventi in C# possono essere invocati solo dall'interno della classe che li dichiara, quindi esponiamo questo metodo.
-    public static void RaiseOnNpcNewDestination(Interaction interaction, Room room)
-    {
-        OnNpcNewDestination?.Invoke(interaction, room);
-    }
+    // Events
+    public static event Action<Interaction, Room> OnNewWishAssigned;
+    public static event Action<bool, Interaction> OnWishCompleted;
 
     private void Start()
     {
-        Room.OnRoomEntered += HandleRoomEntered;
+        Room.OnPlayerEntered += HandlePlayerEnteredRoom;
 
-        if (NPC_Controller != null)
+        if (npcController != null)
         {
-            NPC_Controller.OnDestinationReached += HandleNpcDestinationResult;
+            npcController.OnDestinationReached += HandleDestinationReached;
         }
+
+        // Start the first wish after a brief delay to let everything initialize
+        Invoke(nameof(StartFirstWish), 1f);
+    }
+
+    private void StartFirstWish()
+    {
+        Debug.Log("[RoomManager] Starting first wish...");
+        AssignNewWish();
     }
 
     private void OnDestroy()
     {
-        Room.OnRoomEntered -= HandleRoomEntered;
-        if (NPC_Controller != null)
-            NPC_Controller.OnDestinationReached -= HandleNpcDestinationResult;
+        Room.OnPlayerEntered -= HandlePlayerEnteredRoom;
+
+        if (npcController != null)
+            npcController.OnDestinationReached -= HandleDestinationReached;
     }
 
-    private void HandleRoomEntered(Room room)
+    private void HandlePlayerEnteredRoom(Room room)
     {
         PlayerRoom = room;
+        Debug.Log($"[RoomManager] Player entered room: {room.name}");
     }
 
-    // log minimizzati: la UI/WishManager si occupa di mostrare quello che serve al giocatore
-    private void HandleNpcDestinationResult(bool success, Interaction touched)
+    private void HandleDestinationReached(bool success, Interaction interaction)
     {
-        // comportamento di gioco qui (nessun log ripetuto)
+        Debug.Log($"[RoomManager] NPC reached destination - Success: {success}, Interaction: {interaction?.name ?? "NULL"}");
+        OnWishCompleted?.Invoke(success, interaction);
+
+        // Wait a moment before assigning new wish
+        Invoke(nameof(AssignNewWish), 0.5f);
     }
 
-    private void Update()
+    public void AssignNewWish()
     {
-        // Se non abbiamo un NPC_Controller useremo direttamente il NavMeshAgent (legacy / fallback).
-        if (NPC_Controller == null)
+        if (npcController.IsBusy)
         {
-            if (NPC_Agent == null) return;
-            if (NPC_Agent.hasPath) return;
-
-            Vector3 dest = GetRandomDestination();
-            NPC_Agent.SetDestination(dest);
+            Debug.Log("[RoomManager] NPC is busy, delaying wish assignment");
+            Invoke(nameof(AssignNewWish), 1f);
             return;
         }
 
-        // Evita di assegnare se l'agent sta navigando o è occupato (task/roam/think)
-        if (NPC_Controller.Agent != null && (NPC_Controller.Agent.hasPath || NPC_Controller.IsBusy))
-            return;
+        var (interaction, room) = GetRandomWish();
 
-        // Se non ha percorso e non è busy, selezioniamo una Interaction e Room valide e assegniamo come destinazione
-        (Interaction interaction, Room room) = GetRandomInteractionAndRoom();
         if (interaction != null && room != null)
         {
-            NPC_Controller.SetDestination(interaction, room);
-            // Emit evento per UI / WishManager: mostrare il testo desiderio, aggiornare indicatori ecc.
-            OnNpcNewDestination?.Invoke(interaction, room);
-        }
-    }
+            CurrentTargetInteraction = interaction;
+            CurrentTargetRoom = room;
 
-    [SerializeField] public bool useRandomDestination = false;
-    [SerializeField] public int tempRoomIndex = 0;
-    public (Interaction, Room) GetRandomInteractionAndRoom()
-    {
-        if (Rooms == null || Rooms.Length == 0) return (null, null);
+            Debug.Log($"[RoomManager] 🎯 New Wish Assigned: '{interaction.wishText}' in Room: {room.name}");
 
-        Room randomRoom = null;
-        if (useRandomDestination)
-        {
-            int attempts = 0;
-            do
-            {
-                randomRoom = Rooms[UnityEngine.Random.Range(0, Rooms.Length)];
-                attempts++;
-                if (attempts > 50) break; // sicurezza: esci se non trovi nulla di valido
-            }
-            // NOTE: rimosso il controllo su randomRoom.gameObject.activeInHierarchy per permettere
-            // che anche le Room non attive nella gerarchia possano essere selezionate.
-            // Manteniamo comunque l'esclusione della PlayerRoom e delle stanze senza interaction.
-            while ((randomRoom == PlayerRoom) || randomRoom.InteractionList.Count == 0);
+            npcController.SetDestination(interaction, room);
+            OnNewWishAssigned?.Invoke(interaction, room);
         }
         else
         {
-            randomRoom = Rooms[tempRoomIndex];
+            Debug.LogWarning("[RoomManager] Failed to find valid wish - will retry in 2 seconds");
+            Invoke(nameof(AssignNewWish), 2f);
         }
-
-        if (randomRoom == null || randomRoom.InteractionList.Count == 0) return (null, null);
-
-        Interaction chosen = randomRoom.InteractionList[UnityEngine.Random.Range(0, randomRoom.InteractionList.Count)];
-        return (chosen, randomRoom);
     }
 
-    public Vector3 GetRandomDestination()
+    private (Interaction, Room) GetRandomWish()
     {
-        var pair = GetRandomInteractionAndRoom();
-        return (pair.Item1 != null) ? pair.Item1.transform.position : transform.position;
-    }
-
-    public void ApplyCataloguePreference(Room.HouseSection preferredType)
-    {
-        foreach (var r in Rooms)
+        if (allRooms == null || allRooms.Length == 0)
         {
-            if (r == null) continue;
-            bool shouldBeActive = (r.RoomType == preferredType);
-            r.gameObject.SetActive(shouldBeActive);
+            return (null, null);
         }
 
-        // log rimossi per ridurre rumore
+        // Filter valid rooms (not player's current room, has interactions)
+        int validRoomCount = 0;
+        foreach (var room in allRooms)
+        {
+            if (room != null && room != PlayerRoom && room.AvailableInteractions.Count > 0)
+                validRoomCount++;
+        }
+
+        if (validRoomCount == 0)
+        {
+            return (null, null);
+        }
+
+        Room selectedRoom;
+        int attempts = 0;
+        do
+        {
+            selectedRoom = allRooms[UnityEngine.Random.Range(0, allRooms.Length)];
+            attempts++;
+
+            if (attempts > 20) // Safety break
+            {
+                Debug.LogError("[RoomManager] Could not find valid room after 20 attempts");
+                return (null, null);
+            }
+        }
+        while (selectedRoom == null || selectedRoom == PlayerRoom || selectedRoom.AvailableInteractions.Count == 0);
+
+        Interaction selectedInteraction = selectedRoom.AvailableInteractions[
+            UnityEngine.Random.Range(0, selectedRoom.AvailableInteractions.Count)];
+ 
+        return (selectedInteraction, selectedRoom);
+    }
+
+    public void ForceWish(Interaction interaction, Room room)
+    {
+        if (interaction == null || room == null)
+        {
+            return;
+        }
+
+        CurrentTargetInteraction = interaction;
+        CurrentTargetRoom = room;
+
+        Debug.Log($"[RoomManager] 🔥 Forced Wish: '{interaction.wishText}' in Room: {room.name}");
+
+        npcController.SetDestination(interaction, room);
+        OnNewWishAssigned?.Invoke(interaction, room);
     }
 }

@@ -1,352 +1,299 @@
-﻿using System;
+﻿// NPC_Controller.cs
+using System;
 using System.Collections;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
 
-/// <summary>
-/// NPC_Controller è responsabilità e flusso eventi:
-/// - Mantiene riferimento al `NavMeshAgent` e gestisce la navigazione dell'NCP.
-/// - Riceve destinazione come `Interaction` + `Room` tramite `SetDestination(...)` (tipicamente chiamato da `RoomManager`).
-/// - Quando l'NCP entra nel trigger dell'`Interaction`, `Interaction` chiama `NotifyTouchedInteraction` su questo controller:
-///     -> qui si confronta con il target atteso e si emette `OnDestinationReached(success, touchedInteraction)`.
-/// - `RoomManager` (o altri sistemi) possono sottoscrivere `OnDestinationReached` per aggiornare lo stato di gioco, UI, ecc.
-/// 
-/// Note implementative:
-/// - Nel `Update` viene controllato l'avvicinamento usando `remainingDistance` ma il successo definitivo è determinato dal trigger dell'Interaction.
-/// - Dopo la notifica (`OnDestinationReached`) il target viene resettato e il NavMeshAgent interrompe il percorso.
-/// - Se la destinazione appartiene a una Room non attiva e la Room è di tipo "mutante" (cioè diversa da Fixed),
-///   l'NPC viene inviato al marker `wrongdestination` specifico di quella stanza: questo rappresenta un arrivo "sbagliato"
-///   e deve essere gestito come fallimento dai consumer dell'evento `OnDestinationReached`.
-/// </summary>
-[RequireComponent(typeof(NavMeshAgent))]
 public class NPC_Controller : MonoBehaviour
 {
-    public NavMeshAgent Agent { get; private set; }
+    [Header("Navigation")]
+    public NavMeshAgent agent;
+    public float baseSpeed = 3.5f;
+    public float maxSpeed = 8f;
 
-    // Evento locale: (successo, interaction effettivamente toccata)
-    public event Action<bool, Interaction> OnDestinationReached = delegate { };
+    [Header("Speed Progression")]
+    public float speedIncreasePerSuccess = 0.5f;
+    public float failureSpeedMultiplier = 2.5f;
 
-    private Interaction _currentTargetInteraction;
-    private Room _currentTargetRoom;
-    private bool _hasActiveTarget = false;
+    [Header("Behavior Timings")]
+    public float interactDuration = 2f;
+    public float wanderDuration = 3f;
+    public float thinkDuration = 2f;
+    public float frustrationDuration = 3f; // Time for 720 rotation at wrong destination
 
-    // evita notifiche ripetute quando l'agent è "near" il target
-    private bool _arrivalNotified = false;
+    [Header("Wander Settings")]
+    public float wanderRadius = 2f;
 
-    // indica che l'NPC è occupato (task + roam + thinking). RoomManager controllerà questa flag.
-    public bool IsBusy { get; private set; } = false;
+    // Events
+    public event Action<bool, Interaction> OnDestinationReached;
 
-    // indica che stiamo aspettando che l'agent raggiunga il marker 'wrongdestination'
-    // (usato quando la Room di destinazione è disattivata e la Room è mutante)
-    private bool _expectingWrongDestination = false;
+    // Runtime state
+    public bool IsBusy { get; private set; }
+    public Interaction CurrentTarget { get; private set; }
+    public Room CurrentTargetRoom { get; private set; }
 
-    // Contatori e parametri per la velocità crescente
-    [Header("Speed progression")]
-    [Tooltip("Velocità base usata come riferimento (se <=0 verrà presa da Agent.speed in Awake)")]
-    public float baseSpeed =0f;
-    [Tooltip("Incremento di velocità per ogni destinazione corretta (additivo)")]
-    public float speedIncreasePerSuccess =0.5f;
-    [Tooltip("Velocità massima che l'agente può raggiungere")]
-    public float maxSpeed =8f;
+    private int successfulTrips;
+    private int failedTrips;
+    private Coroutine currentBehaviorRoutine;
+    private bool isGoingToWrongDestination;
+    private bool hasReachedDestination;
+    private Room currentRoom; // Track which room NPC is currently in
 
-    // Moltiplicatore applicato alla penalità di velocità quando l'NPC sbaglia
-    [Tooltip("Moltiplicatore dell'aumento di velocità in caso di errore rispetto all'incremento per successo (es.2 = il doppio)")]
-    public float failureSpeedMultiplier =2.5f;
-
-    private int _successfulArrivals =0;
-    private int _failedArrivals =0;
-
-    // wander
-    private Coroutine _wanderRoutine;
-
-    void Awake()
+    private void Awake()
     {
-        Agent = GetComponent<NavMeshAgent>();
-        if (Agent == null)
-        {
-            Debug.LogError("NPC_Controller: NavMeshAgent missing");
-            return;
-        }
+        if (agent == null)
+            agent = GetComponent<NavMeshAgent>();
 
-        // Se non è stata impostata una baseSpeed via Inspector, prendila dall'agent
-        if (baseSpeed <=0f)
-        {
-            baseSpeed = Agent.speed;
-        }
-
-        // Assicuriamoci che l'agente parta con la baseSpeed corretta
-        Agent.speed = Mathf.Clamp(baseSpeed,0f, maxSpeed);
+        agent.speed = baseSpeed;
     }
 
-
-    void Update()
+    private void Update()
     {
-        if (!_hasActiveTarget) return;
-
-        // Controllo se l'agent è arrivato vicino alla destinazione.
-        // Se siamo vicino e non abbiamo ancora notificato l'arrivo, invochiamo il comportamento di "tocco"
-        // (utile quando il trigger fisico dell'Interaction non scatta).
-        if (!Agent.pathPending)
+        // Check if we've reached our destination (for wrong destinations that don't have triggers)
+        if (!IsBusy && !hasReachedDestination && agent.hasPath && !agent.pathPending)
         {
-            if (Agent.remainingDistance <= Agent.stoppingDistance)
+            if (agent.remainingDistance <= agent.stoppingDistance)
             {
-                if (!Agent.hasPath || Agent.velocity.sqrMagnitude ==0f)
+                if (!agent.hasPath || agent.velocity.sqrMagnitude == 0f)
                 {
-                    if (!_arrivalNotified)
+                    hasReachedDestination = true;
+
+                    if (isGoingToWrongDestination)
                     {
-                        _arrivalNotified = true;
-
-                        // Se eravamo stati indirizzati al marker 'wrongdestination' perché la Room non è attiva
-                        // e la Room è di tipo mutante, consideriamo l'arrivo come un fallimento esplicito.
-                        if (_expectingWrongDestination)
-                        {
-                            // Applichiamo l'aumento di velocità per fallimento
-                            ApplyFailureSpeedIncrease();
-
-                            // Notifica fallimento senza interaction (consumer decide come applicare penalità)
-                            OnDestinationReached?.Invoke(false, null);
-
-                            // Reset stato interno
-                            _expectingWrongDestination = false;
-                            _hasActiveTarget = false;
-                            _currentTargetInteraction = null;
-                            _currentTargetRoom = null;
-                            _arrivalNotified = false;
-                            Agent.ResetPath();
-                        }
-                        else if (_currentTargetInteraction != null)
-                        {
-                            // Fallback: chiamiamo NotifyTouchedInteraction senza dipendere dal trigger fisico.
-                            NotifyTouchedInteraction(_currentTargetInteraction);
-                        }
-                        else
-                        {
-                            // Nessun interaction registrata: reset sicurezza
-                            _hasActiveTarget = false;
-                            Agent.ResetPath();
-                            _arrivalNotified = false;
-                        }
+                        // Reached wrong destination - do frustration sequence
+                        Debug.Log($"[NPC] Reached wrong destination");
+                        StartBehaviorSequence(false, null);
+                    }
+                    else if (CurrentTarget != null)
+                    {
+                        // Reached target position - check if interaction is valid
+                        bool success = IsInteractionValid(CurrentTarget, CurrentTargetRoom);
+                        Debug.Log($"[NPC] Reached target position - Success: {success}");
+                        StartBehaviorSequence(success, CurrentTarget);
                     }
                 }
             }
         }
     }
 
-    /// <summary>
-    /// Imposta il flag busy (usato da WishManager mentre l'NPC esegue task/roam/think).
-    /// </summary>
-    public void SetBusy(bool busy)
+    private void OnTriggerEnter(Collider other)
     {
-        IsBusy = busy;
-        if (!busy)
+        // Check if NPC entered a room
+        Room room = other.GetComponent<Room>();
+        if (room != null)
         {
-            // quando smettiamo di essere busy interrompiamo eventuale wander residuo
-            StopWander();
+            currentRoom = room;
+            Debug.Log($"[NPC] Entered room: {room.name}");
+
+            // If this is our target room, check if the interaction is available
+            if (CurrentTargetRoom != null && room == CurrentTargetRoom && !isGoingToWrongDestination)
+            {
+                bool interactionValid = IsInteractionValid(CurrentTarget, CurrentTargetRoom);
+
+                if (!interactionValid)
+                {
+                    // Interaction not available - go to wrong destination
+                    Debug.Log($"[NPC] Target interaction not available in room - going to wrong destination");
+                    GoToWrongDestination();
+                }
+            }
         }
     }
 
-    /// <summary>
-    /// Imposta la destinazione dell'NPC: memorizza target e chiama `Agent.SetDestination`.
-    /// - Chiamato da `RoomManager` o altro sistema di high-level.
-    ///
-    /// Comportamento speciale:
-    /// - Se la Room target è disattivata (gameObject inactive) O l'Interaction non è attiva in gerarchia, E la Room è di tipo mutante (HouseSection != Fixed),
-    ///   l'NPC viene inviato al marker `Room.wrongdestination` specifico di quella stanza. Questo consente di
-    ///   avere un wrong destination diverso stanza per stanza (es. per ogni variante mutante).
-    /// - In tutti gli altri casi l'NPC viene mandato verso l'Interaction richiesta.
-    /// - Se il marker `wrongdestination` non è assegnato o è null, si effettua fallback verso la posizione dell'Interaction.
-    /// </summary>
-    public void SetDestination(Interaction interaction, Room targetRoom)
+    private bool IsInteractionValid(Interaction interaction, Room room)
     {
-        if (interaction == null)
+        // Check if room is active and interaction exists and is active
+        return room != null && room.IsActive &&
+               interaction != null && interaction.IsActive &&
+               room.AvailableInteractions.Contains(interaction);
+    }
+
+    private void GoToWrongDestination()
+    {
+        if (CurrentTargetRoom == null || CurrentTargetRoom.wrongDestinationPoint == null)
         {
-            Debug.LogWarning("NPC_Controller.SetDestination called with null interaction");
+            Debug.LogWarning($"[NPC] No wrong destination available - cannot redirect");
+            StartBehaviorSequence(false, CurrentTarget);
             return;
         }
 
-        if (targetRoom == null)
+        isGoingToWrongDestination = true;
+        hasReachedDestination = false;
+        agent.SetDestination(CurrentTargetRoom.wrongDestinationPoint.position);
+        Debug.Log($"[NPC] Redirecting to wrong destination in {CurrentTargetRoom.name}");
+    }
+
+    public void SetDestination(Interaction interaction, Room room)
+    {
+        if (IsBusy)
         {
-            Debug.LogWarning("NPC_Controller.SetDestination called with null targetRoom");
             return;
         }
 
-        // interrompe eventuale wander
-        StopWander();
+        StopAllBehaviors();
 
-        // memorizza target logico (usato per validazione quando l'Interaction viene effettivamente toccata)
-        _currentTargetInteraction = interaction;
-        _currentTargetRoom = targetRoom;
-        _hasActiveTarget = true;
-        _arrivalNotified = false;
-        _expectingWrongDestination = false;
+        CurrentTarget = interaction;
+        CurrentTargetRoom = room;
+        isGoingToWrongDestination = false;
+        hasReachedDestination = false;
 
-        // Determiniamo se dobbiamo forzare il wrongdestination:
-        // - la stanza deve essere inattiva nella gerarchia O l'interaction non esistere/essere inattiva nella gerarchia,
-        // - e la stanza deve essere di tipo "mutante" (ossia diversa da Fixed).
-        bool roomActive = targetRoom.gameObject != null && targetRoom.gameObject.activeInHierarchy;
-        bool interactionActive = interaction.gameObject != null && interaction.gameObject.activeInHierarchy;
+        Debug.Log($"[NPC] New destination: {interaction.name} in {room.name}");
 
-        if ((!roomActive || !interactionActive) && targetRoom.RoomType != Room.HouseSection.Fixed)
+        // Always start by going to the interaction first
+        // We'll check if it's valid when we enter the room
+        agent.SetDestination(interaction.transform.position);
+    }
+
+    public void NotifyInteractionReached(Interaction interaction)
+    {
+        if (IsBusy || hasReachedDestination)
         {
-            if (targetRoom.wrongdestination != null)
-            {
-                // Indichiamo che stiamo aspettando il marker sbagliato e rimuoviamo l'interaction logica
-                // per evitare che il fallback nel Update chiami NotifyTouchedInteraction con successo.
-                _expectingWrongDestination = true;
-                _currentTargetInteraction = null; // non vogliamo validare la interaction perché la stanza/interaction non è disponibile
-                Agent.SetDestination(targetRoom.wrongdestination.position);
-                if (!roomActive && interactionActive)
-                {
-                    Debug.Log($"NPC_Controller: Room '{targetRoom.name}' inattiva -> inviato a wrongdestination.");
-                }
-                else if (!interactionActive)
-                {
-                    Debug.Log($"NPC_Controller: Interaction '{interaction.name}' non attiva -> inviato a wrongdestination della Room '{targetRoom.name}'.");
-                }
-            }
-            else
-            {
-                // Se manca il marker wrongdestination facciamo fallback all'interaction per non lasciare l'agente inattivo.
-                Debug.LogWarning($"NPC_Controller: Room '{targetRoom.name}' è mutante ma manca 'wrongdestination'. Fallback alla Interaction position.");
-                _expectingWrongDestination = false;
-                Agent.SetDestination(interaction.transform.position);
-            }
-
-            // Impostiamo IsBusy a false: l'NPC sta navigando verso il marker di errore o fallback
-            IsBusy = false;
             return;
         }
 
-        // comportamento normale: vai verso l'interaction della room attiva
-        _expectingWrongDestination = false;
-        Agent.SetDestination(interaction.transform.position);
+        hasReachedDestination = true;
+        bool success = (interaction == CurrentTarget && IsInteractionValid(interaction, CurrentTargetRoom));
 
-        // impostiamo IsBusy a false: la destinazione implica che l'NPC stia navigando verso il target
-        IsBusy = false;
-        // la UI/WishManager mostrerà la wish
+        Debug.Log($"[NPC] Reached interaction: {interaction.name} - Success: {success}");
+
+        StartBehaviorSequence(success, interaction);
     }
 
-    /// <summary>
-    /// Avvia un semplice wander usando il NavMesh: piccoli target casuali entro `radius` per `duration` secondi.
-    /// Il wander viene interrotto automaticamente se viene impostata una nuova destinazione tramite `SetDestination`.
-    /// </summary>
-    public void StartWander(float duration, float radius)
+    private void StartBehaviorSequence(bool success, Interaction interaction)
     {
-        if (_wanderRoutine != null) StopCoroutine(_wanderRoutine);
-        _wanderRoutine = StartCoroutine(WanderRoutine(duration, radius));
+        if (currentBehaviorRoutine != null)
+            StopCoroutine(currentBehaviorRoutine);
+
+        currentBehaviorRoutine = StartCoroutine(BehaviorSequence(success, interaction));
     }
 
-    /// <summary>
-    /// Ferma il wander corrente (se attivo) e resetta il path dell'agente.
-    /// </summary>
-    public void StopWander()
+    private IEnumerator BehaviorSequence(bool success, Interaction interaction)
     {
-        if (_wanderRoutine != null)
-        {
-            StopCoroutine(_wanderRoutine);
-            _wanderRoutine = null;
-        }
-        if (Agent != null && Agent.hasPath)
-        {
-            Agent.ResetPath();
-        }
-    }
+        IsBusy = true;
+        agent.ResetPath();
 
-    private IEnumerator WanderRoutine(float duration, float radius)
-    {
-        float endTime = Time.time + Mathf.Max(0.01f, duration);
-        while (Time.time < endTime)
-        {
-            // scegli un punto casuale intorno all'NPC
-            Vector3 randomDir = UnityEngine.Random.insideUnitSphere * radius;
-            randomDir.y =0f;
-            Vector3 samplePoint = transform.position + randomDir;
+        Debug.Log($"[NPC] Starting behavior sequence - Success: {success}");
 
-            NavMeshHit hit;
-            if (NavMesh.SamplePosition(samplePoint, out hit, radius, NavMesh.AllAreas))
-            {
-                Agent.SetDestination(hit.position);
-
-                // attendi che arrivi o timeout breve
-                float waitTimeout =3.0f;
-                while (!Agent.pathPending && Agent.remainingDistance > Agent.stoppingDistance && waitTimeout >0f)
-                {
-                    waitTimeout -= Time.deltaTime;
-                    yield return null;
-                }
-
-                // piccola pausa prima di scegliere il prossimo punto
-                yield return new WaitForSeconds(0.15f);
-            }
-            else
-            {
-                // non trovato punto valido, aspetta un frame
-                yield return null;
-            }
-        }
-
-        // terminato wander
-        _wanderRoutine = null;
-        if (Agent != null && Agent.hasPath)
-            Agent.ResetPath();
-    }
-
-    /// <summary>
-    /// Chiamato da `Interaction` quando l'NCP entra nel suo trigger.
-    /// Confronta con il target atteso e notifica il risultato tramite `OnDestinationReached`.
-    /// Dopo la notifica resetta lo stato di destinazione.
-    /// </summary>
-    public void NotifyTouchedInteraction(Interaction touched)
-    {
-        bool success = (_hasActiveTarget && touched == _currentTargetInteraction);
-
-        // Se è un successo, incrementiamo il contatore e aggiornato la velocità dell'agente
+        // Update speed based on result
         if (success)
         {
-            _successfulArrivals++;
-            UpdateAgentSpeedBySuccess();
+            successfulTrips++;
+            agent.speed = Mathf.Min(maxSpeed, baseSpeed + successfulTrips * speedIncreasePerSuccess);
+            Debug.Log($"[NPC] SUCCESS! Speed: {agent.speed}");
+
+            // SUCCESS SEQUENCE: Interact -> Wander -> Think
+            //Debug.Log($"[NPC] Interacting for {interactDuration}s");
+            yield return new WaitForSeconds(interactDuration);
+
+            //Debug.Log($"[NPC] Wandering for {wanderDuration}s");
+            yield return StartCoroutine(WanderBehavior(wanderDuration));
+
+            //Debug.Log($"[NPC] Thinking for {thinkDuration}s");
+            yield return StartCoroutine(ThinkingBehavior(thinkDuration));
         }
         else
         {
-            // in caso di fallimento applica aumento di velocità maggiore
-            _failedArrivals++;
-            ApplyFailureSpeedIncrease();
+            failedTrips++;
+            float speedIncrease = speedIncreasePerSuccess * failureSpeedMultiplier;
+            agent.speed = Mathf.Min(maxSpeed, agent.speed + speedIncrease);
+            Debug.Log($"[NPC] FAILURE! Speed: {agent.speed}");
+
+            // FAILURE SEQUENCE: Frustration (720 rotation) -> Think
+            Debug.Log($"[NPC] Showing frustration for {frustrationDuration}s");
+            yield return StartCoroutine(FrustrationBehavior(frustrationDuration));
+
+            Debug.Log($"[NPC] Thinking for {thinkDuration}s");
+            yield return StartCoroutine(ThinkingBehavior(thinkDuration));
         }
 
-        // Notifica gli ascoltatori (RoomManager / WishManager / altri)
-        OnDestinationReached?.Invoke(success, touched);
+        // Notify completion
+        Debug.Log($"[NPC] Behavior sequence complete");
+        OnDestinationReached?.Invoke(success, interaction);
 
-        // Reset target: l'NCP smette di navigare e sarà pronto per una nuova destinazione
-        _hasActiveTarget = false;
-        _currentTargetInteraction = null;
-        _currentTargetRoom = null;
-        _arrivalNotified = false;
-        _expectingWrongDestination = false;
-        Agent.ResetPath();
+        // Clean up
+        CurrentTarget = null;
+        CurrentTargetRoom = null;
+        IsBusy = false;
+        isGoingToWrongDestination = false;
+        hasReachedDestination = false;
+        currentBehaviorRoutine = null;
     }
 
-    private void UpdateAgentSpeedBySuccess()
+    private IEnumerator FrustrationBehavior(float duration)
     {
-        if (Agent == null) return;
-        float newSpeed = Mathf.Min(maxSpeed, baseSpeed + _successfulArrivals * speedIncreasePerSuccess);
-        Agent.speed = newSpeed;
-        // opzionale: potremmo anche aggiornare acceleration se necessario
-        Debug.Log($"NPC_Controller: success count={_successfulArrivals}, Agent.speed set to {Agent.speed:F2}");
+        // 720 degrees rotation = 2 full rotations
+        float totalRotation = 720f;
+        float rotationSpeed = totalRotation / duration;
+        float timer = 0f;
+
+        while (timer < duration)
+        {
+            transform.Rotate(0, rotationSpeed * Time.deltaTime, 0);
+            timer += Time.deltaTime;
+            yield return null;
+        }
     }
 
-    private void ApplyFailureSpeedIncrease()
+    private IEnumerator WanderBehavior(float duration)
     {
-        if (Agent == null) return;
-        float delta = speedIncreasePerSuccess * failureSpeedMultiplier;
-        float newSpeed = Mathf.Min(maxSpeed, Agent.speed + delta);
-        Agent.speed = newSpeed;
-        Debug.Log($"NPC_Controller: failure count={_failedArrivals}, applied failure speed increase {delta:F2}, Agent.speed now {Agent.speed:F2}");
+        float endTime = Time.time + duration;
+
+        while (Time.time < endTime && IsBusy)
+        {
+            Vector3 randomPoint = transform.position + UnityEngine.Random.insideUnitSphere * wanderRadius;
+            randomPoint.y = transform.position.y;
+
+            NavMeshHit hit;
+            if (NavMesh.SamplePosition(randomPoint, out hit, wanderRadius, NavMesh.AllAreas))
+            {
+                agent.SetDestination(hit.position);
+
+                // Wait until reached or timeout
+                float waitTime = 0f;
+                while (agent.pathPending || agent.remainingDistance > agent.stoppingDistance)
+                {
+                    waitTime += Time.deltaTime;
+                    if (waitTime > 2f) break;
+                    yield return null;
+                }
+            }
+
+            yield return new WaitForSeconds(0.3f);
+        }
+
+        agent.ResetPath();
     }
 
-    // Ritorna il fattore velocità relativo alla base (es.1.0 = baseSpeed,2.0 = doppia velocità)
+    private IEnumerator ThinkingBehavior(float duration)
+    {
+        float rotationSpeed = 90f;
+        float timer = 0f;
+
+        while (timer < duration)
+        {
+            transform.Rotate(0, rotationSpeed * Time.deltaTime, 0);
+            timer += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    private void StopAllBehaviors()
+    {
+        if (currentBehaviorRoutine != null)
+        {
+            StopCoroutine(currentBehaviorRoutine);
+            currentBehaviorRoutine = null;
+        }
+
+        agent.ResetPath();
+        IsBusy = false;
+        isGoingToWrongDestination = false;
+        hasReachedDestination = false;
+    }
+
     public float GetSpeedFactor()
     {
-        if (Agent == null || baseSpeed <=0f) return 1f;
-        return Agent.speed / Mathf.Max(0.0001f, baseSpeed);
+        return agent.speed / baseSpeed;
     }
 }

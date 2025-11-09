@@ -30,7 +30,6 @@ public class ArchitectMode : MonoBehaviour
         //se premi TAB apri Architect Mode
         if (Input.GetKeyDown(KeyCode.Tab))
         {
-            Debug.Log("Toggled Architect Mode");
             SetMinimapStatus(!status);
         }
     }
