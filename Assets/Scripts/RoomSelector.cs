@@ -54,6 +54,11 @@ public class RoomSelector : MonoBehaviour
         }
     }
 
+    private void Update()
+    {
+        selectorDropdown.interactable = !(rooms.Any(room => room == roomManager.PlayerRoom));
+    }
+
     private void OnDestroy()
     {
         if (selectorDropdown != null)
