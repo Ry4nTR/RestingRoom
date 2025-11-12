@@ -705,16 +705,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &851713273162601779 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2591500412633162794, guid: bdd2b195605ccf84db020d5bbf5c93cc, type: 3}
-  m_PrefabInstance: {fileID: 4502095755552251756}
-  m_PrefabAsset: {fileID: 0}
---- !u!4 &1903170580145021319 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 8104981728941660055, guid: bdd2b195605ccf84db020d5bbf5c93cc, type: 3}
-  m_PrefabInstance: {fileID: 4502095755552251756}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &3170802772991197681 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5049434777693403105, guid: bdd2b195605ccf84db020d5bbf5c93cc, type: 3}
@@ -745,41 +735,9 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 704192562966540718, guid: bdd2b195605ccf84db020d5bbf5c93cc, type: 3}
-      propertyPath: wishText
-      value: I need more motion in my life. Vertical, on a pole.
-      objectReference: {fileID: 0}
-    - target: {fileID: 1639484586917586638, guid: bdd2b195605ccf84db020d5bbf5c93cc, type: 3}
-      propertyPath: type
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1639484586917586638, guid: bdd2b195605ccf84db020d5bbf5c93cc, type: 3}
-      propertyPath: wrongDestinationPoint
-      value: 
-      objectReference: {fileID: 1903170580145021319}
-    - target: {fileID: 1639484586917586638, guid: bdd2b195605ccf84db020d5bbf5c93cc, type: 3}
-      propertyPath: interactions.Array.size
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 1639484586917586638, guid: bdd2b195605ccf84db020d5bbf5c93cc, type: 3}
-      propertyPath: 'interactions.Array.data[0]'
-      value: 
-      objectReference: {fileID: 5016405098884258122}
-    - target: {fileID: 1639484586917586638, guid: bdd2b195605ccf84db020d5bbf5c93cc, type: 3}
-      propertyPath: 'interactions.Array.data[1]'
-      value: 
-      objectReference: {fileID: 8669901185188035025}
-    - target: {fileID: 2591500412633162794, guid: bdd2b195605ccf84db020d5bbf5c93cc, type: 3}
-      propertyPath: m_Name
-      value: BANCONEEE
-      objectReference: {fileID: 0}
     - target: {fileID: 3431081710724711088, guid: bdd2b195605ccf84db020d5bbf5c93cc, type: 3}
       propertyPath: m_Name
       value: House
-      objectReference: {fileID: 0}
-    - target: {fileID: 4270259362680865611, guid: bdd2b195605ccf84db020d5bbf5c93cc, type: 3}
-      propertyPath: m_IsActive
-      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5940277902179773680, guid: bdd2b195605ccf84db020d5bbf5c93cc, type: 3}
       propertyPath: m_LocalPosition.x
@@ -822,51 +780,10 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects:
-    - {fileID: 4270259362680865611, guid: bdd2b195605ccf84db020d5bbf5c93cc, type: 3}
+    m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 2591500412633162794, guid: bdd2b195605ccf84db020d5bbf5c93cc, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 5016405098884258123}
-    - targetCorrespondingSourceObject: {fileID: 2591500412633162794, guid: bdd2b195605ccf84db020d5bbf5c93cc, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 5016405098884258122}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: bdd2b195605ccf84db020d5bbf5c93cc, type: 3}
---- !u!114 &5016405098884258122
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 851713273162601779}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 335e1009378af024cbb626a39cdb5d64, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Interaction
-  wishText: ' I need to do some networking, with a nice drink beside me'
---- !u!65 &5016405098884258123
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 851713273162601779}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.040017698, y: 0.006303224, z: 0.010000009}
-  m_Center: {x: 0.050628375, y: 0.08796787, z: -0.010010852}
 --- !u!114 &5985147803808905340 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 1639484586917586638, guid: bdd2b195605ccf84db020d5bbf5c93cc, type: 3}
@@ -1031,17 +948,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3eb93c35f20926b47b3df27a5fe3a9b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NPC_Controller
---- !u!114 &8669901185188035025 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 704192562966540718, guid: bdd2b195605ccf84db020d5bbf5c93cc, type: 3}
-  m_PrefabInstance: {fileID: 4502095755552251756}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 335e1009378af024cbb626a39cdb5d64, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Interaction
 --- !u!1001 &8676924799748319925
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1145,7 +1051,7 @@ PrefabInstance:
     - target: {fileID: 5057022151283080226, guid: a36cf0aea7a684e4b9f59ce0a01c2c39, type: 3}
       propertyPath: 'rooms.Array.data[1]'
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 5985147803808905340}
     - target: {fileID: 5560879283347695702, guid: a36cf0aea7a684e4b9f59ce0a01c2c39, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
