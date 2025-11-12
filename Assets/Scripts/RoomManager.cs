@@ -1,6 +1,7 @@
 ﻿// RoomManager.cs
 using UnityEngine;
 using System;
+using System.Linq;
 
 public class RoomManager : MonoBehaviour
 {
@@ -15,6 +16,7 @@ public class RoomManager : MonoBehaviour
     public Room PlayerRoom { get; private set; }
     public Room CurrentTargetRoom { get; private set; }
     public Interaction CurrentTargetInteraction { get; private set; }
+    public Room LastVisitedRoom { get; private set; } // NEW: Track last visited room
 
     // Events
     public static event Action<Interaction, Room> OnNewWishAssigned;
@@ -55,7 +57,13 @@ public class RoomManager : MonoBehaviour
 
     private void HandleDestinationReached(bool success, Interaction interaction)
     {
-        Debug.Log($"[RoomManager] NPC reached destination - Success: {success}, Interaction: {interaction?.name ?? "NULL"}");
+        // Update last visited room when NPC completes a wish
+        if (CurrentTargetRoom != null)
+        {
+            LastVisitedRoom = CurrentTargetRoom;
+            Debug.Log($"[RoomManager] Marking {CurrentTargetRoom.name} as last visited room");
+        }
+
         OnWishCompleted?.Invoke(success, interaction);
 
         // Wait a moment before assigning new wish
@@ -78,7 +86,7 @@ public class RoomManager : MonoBehaviour
             CurrentTargetInteraction = interaction;
             CurrentTargetRoom = room;
 
-            Debug.Log($"[RoomManager] 🎯 New Wish Assigned: '{interaction.wishText}' in Room: {room.name}");
+            //Debug.Log($"[RoomManager] 🎯 New Wish Assigned: '{interaction.wishText}' in Room: {room.name}");
 
             npcController.SetDestination(interaction, room);
             OnNewWishAssigned?.Invoke(interaction, room);
@@ -97,17 +105,36 @@ public class RoomManager : MonoBehaviour
             return (null, null);
         }
 
-        // Filter valid rooms (not player's current room, has interactions)
+        // Filter valid rooms (not player's current room, not last visited room, has interactions)
         int validRoomCount = 0;
         foreach (var room in allRooms)
         {
-            if (room != null && room != PlayerRoom && room.AvailableInteractions.Count > 0)
+            if (room != null &&
+                room != PlayerRoom &&
+                room != LastVisitedRoom && // NEW: Exclude last visited room
+                room.AvailableInteractions.Count > 0)
                 validRoomCount++;
         }
 
+        Debug.Log($"[RoomManager] Found {validRoomCount} valid rooms for wish assignment (excluding player room and last visited room: {LastVisitedRoom?.name ?? "none"})");
+
         if (validRoomCount == 0)
         {
-            return (null, null);
+            // If no valid rooms found, allow last visited room but not player room
+            Debug.LogWarning("[RoomManager] No rooms available excluding last visited - relaxing constraints");
+            foreach (var room in allRooms)
+            {
+                if (room != null &&
+                    room != PlayerRoom &&
+                    room.AvailableInteractions.Count > 0)
+                    validRoomCount++;
+            }
+
+            if (validRoomCount == 0)
+            {
+                Debug.LogWarning("[RoomManager] No valid rooms available for wish assignment even with relaxed constraints");
+                return (null, null);
+            }
         }
 
         Room selectedRoom;
@@ -117,17 +144,22 @@ public class RoomManager : MonoBehaviour
             selectedRoom = allRooms[UnityEngine.Random.Range(0, allRooms.Length)];
             attempts++;
 
-            if (attempts > 20) // Safety break
+            if (attempts > 50) // Increased safety break
             {
-                Debug.LogError("[RoomManager] Could not find valid room after 20 attempts");
+                Debug.LogError("[RoomManager] Could not find valid room after 50 attempts");
                 return (null, null);
             }
         }
-        while (selectedRoom == null || selectedRoom == PlayerRoom || selectedRoom.AvailableInteractions.Count == 0);
+        while (selectedRoom == null ||
+               selectedRoom == PlayerRoom ||
+               selectedRoom == LastVisitedRoom || // NEW: Exclude last visited
+               selectedRoom.AvailableInteractions.Count == 0);
 
         Interaction selectedInteraction = selectedRoom.AvailableInteractions[
             UnityEngine.Random.Range(0, selectedRoom.AvailableInteractions.Count)];
- 
+
+        //Debug.Log($"[RoomManager] Selected room: {selectedRoom.name} with {selectedRoom.AvailableInteractions.Count} available interactions");
+
         return (selectedInteraction, selectedRoom);
     }
 

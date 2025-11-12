@@ -101,7 +101,7 @@ public class PleasureManager : MonoBehaviour
         }
 
         ApplyToUI();
-        Debug.Log($"[PleasureManager] Success: +{baseReward:F1} pleasure -> {_currentPleasure:F1}/{maxPleasure} (mistakes={_mistakeCount})");
+        //Debug.Log($"[PleasureManager] Success: +{baseReward:F1} pleasure -> {_currentPleasure:F1}/{maxPleasure} (mistakes={_mistakeCount})");
 
         // se la barra è stata precedentemente a zero e ora risale, permetti future notifiche di depletion
         if (_currentPleasure > 0f && _depletedRaised)

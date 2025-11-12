@@ -51,7 +51,7 @@ public class WishManager : MonoBehaviour
         thinkingDuration = Mathf.Max(minThinkingDuration, thinkingDuration);
 
         HideWishBubble();
-        Debug.Log($"WishManager: Wish completed. Total: {completedWishes}. New thinking duration: {thinkingDuration}");
+        //Debug.Log($"WishManager: Wish completed. Total: {completedWishes}. New thinking duration: {thinkingDuration}");
     }
 
     private void ShowWishBubble(string wishText)
